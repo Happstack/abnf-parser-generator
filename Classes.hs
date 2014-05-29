@@ -7,9 +7,10 @@ import ABNF.Parser (abnf,abnfRule)
 import ABNF.Printer
 import Control.Applicative (Applicative(pure, (<*>),(<*), (*>)))
 import Control.Monad.Reader (Reader, ask, runReader)
+import Data.ByteString.Char8
 import Data.Char (chr)
 import Data.List ((\\), sort)
-import Data.Text (Text, pack, unpack)
+-- import Data.Text (Text, pack, unpack)
 import qualified Data.Map as Map
 import Language.Haskell.TH        (Exp, ExpQ, Q, appE, varE)
 import Language.Haskell.TH.Syntax (Lift(lift))
@@ -43,7 +44,7 @@ class ApplicativeRepr repr => Pair repr where
 -- ABNF Parser class
 ------------------------------------------------------------------------------
 
-instance Lift Text where
+instance Lift ByteString where
     lift t =
         let s = unpack t
         in [| pack s |]
@@ -54,14 +55,14 @@ data Predicate =
 $(deriveLift ''Predicate)
 
 class (Pair repr, ApplicativeRepr repr) => ABNFParser repr where
-    pCharVal    :: Text -> repr Text
+    pCharVal    :: ByteString -> repr ByteString
     pHexChar    :: [Char] -> repr Char
 --    pAnyChar    :: repr Char
-    pEnumerate  :: (Lift a) => [(Text, a)] -> repr a
+    pEnumerate  :: (Lift a) => [(ByteString, a)] -> repr a
     pDigit      :: repr Char
-    pTakeWhile1 :: Predicate -> repr Text
+    pTakeWhile1 :: Predicate -> repr ByteString
     pMany       :: (Lift a) => repr a -> repr [a]
     pMany1      :: (Lift a) => repr a -> repr [a]
     pOptional   :: (Lift a) => repr a -> repr (Maybe a)
-
+    digitsToInt :: repr [Char] -> repr Int
 

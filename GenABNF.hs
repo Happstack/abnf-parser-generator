@@ -7,9 +7,11 @@ import Classes
 import Control.Applicative (Applicative(..), (<$>))
 import Control.Monad.Reader
 import Control.Monad.State
+import qualified Data.ByteString.Char8 as C
 import Data.List ((\\), sort)
 import qualified Data.Map as Map
 import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 
 newtype GenABNF a = GenABNF { runGenABNF :: Elements }
 
@@ -34,15 +36,16 @@ instance Pair GenABNF where
 instance ABNFParser GenABNF where
     pCharVal t
         | t == "\"" = GenABNF (Alternation [Concatenation [Repetition Nothing (NV (HexVal (NumSpec [HexDigit '2', HexDigit '2'] Nothing)))]])
-        | otherwise = GenABNF (Alternation [Concatenation [Repetition Nothing (CV (CharVal t))]])
+        | otherwise = GenABNF (Alternation [Concatenation [Repetition Nothing (CV (CharVal (Text.decodeUtf8 t)))]])
     pEnumerate keyVals =
-        GenABNF (Alternation [Concatenation [Repetition Nothing (CV (CharVal key))] | (key, _) <- keyVals])
+        GenABNF (Alternation [Concatenation [Repetition Nothing (CV (CharVal (Text.decodeUtf8 key)))] | (key, _) <- keyVals])
     pHexChar hc = GenABNF (Alternation [Concatenation [Repetition Nothing (NV (HexVal (NumSpec (map HexDigit hc) Nothing)))]])
     pDigit = GenABNF (Alternation [Concatenation [Repetition Nothing (RN (RuleName "DIGIT"))]])
     pMany e = GenABNF (Alternation [Concatenation [Repetition (Just (Variable Nothing Nothing)) (Group (runGenABNF e))]])
     pMany1 e = GenABNF (Alternation [Concatenation [Repetition (Just (Variable (Just 1) Nothing)) (Group (runGenABNF e))]])
     pOptional e = GenABNF (Alternation [Concatenation [Repetition Nothing (Option (runGenABNF e))]])
     pTakeWhile1 (NotInClass notInClass) = GenABNF (Alternation [Concatenation [Repetition (Just (Variable (Just 1) Nothing)) (Group (Alternation [Concatenation [Repetition Nothing (if c == '\x22' then (NV (HexVal (NumSpec [HexDigit '2', HexDigit '2'] Nothing))) else (CV (CharVal (Text.singleton c))))] | c <- ['\0'..'\127'] \\ notInClass]))]])
+    digitsToInt p = GenABNF (runGenABNF p)
 
 
 

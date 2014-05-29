@@ -1,0 +1,31 @@
+name:                abnf-parser-generator
+version:             0.1.0.0
+synopsis:            create and validate parsers for ABNF grammars
+license:             BSD3
+license-file:        LICENSE
+author:              Jeremy Shaw
+maintainer:          jeremy@n-heptane.com
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Classes
+                       GenABNF,
+                       GenAttoparsec,
+                       HttpTypesParser,
+                       HttpTypesAttoparsec
+  other-extensions:    GADTs, NoMonomorphismRestriction, TemplateHaskell, QuasiQuotes, OverloadedStrings, GeneralizedNewtypeDeriving
+  build-depends:       base             >= 4.6  && < 4.8,
+                       bytestring       >= 0.10 && < 0.11,
+                       case-insensitive >= 1.2  && < 1.3,
+                       parsec           >= 3.1  && < 3.2,
+                       abnf             >= 0.1  && < 0.2,
+                       mtl              >= 2.1  && < 2.2,
+                       text             >= 1.1  && < 1.2,
+                       containers       >= 0.5  && < 0.6,
+                       template-haskell >= 2.8  && < 2.10,
+                       th-lift          >= 0.6  && < 0.7,
+                       attoparsec       >= 0.11 && < 0.12,
+                       http-types       >= 0.8  && < 0.9
+  default-language:    Haskell2010
