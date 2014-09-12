@@ -1,9 +1,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
-module GenABNF where
+{-| ClassyParser instance which generates 'ABNF'
+-}
+module ABNF.ClassyParser.Gen.ABNF
+       ( GenABNF(..)
+       , normalizeAlternation
+       ) where
 
 import ABNF.Types
 import ABNF.Printer
-import Classes
+import ABNF.ClassyParser.Classes
 import Control.Applicative (Applicative(..), (<$>))
 import Control.Monad.Reader
 import Control.Monad.State
@@ -33,7 +38,7 @@ instance Pair GenABNF where
     prj2  = GenABNF (Alternation [])
     pair  = GenABNF (Alternation [])
 
-instance ABNFParser GenABNF where
+instance ClassyParser GenABNF where
     pCharVal t
         | t == "\"" = GenABNF (Alternation [Concatenation [Repetition Nothing (NV (HexVal (NumSpec [HexDigit '2', HexDigit '2'] Nothing)))]])
         | otherwise = GenABNF (Alternation [Concatenation [Repetition Nothing (CV (CharVal (Text.decodeUtf8 t)))]])

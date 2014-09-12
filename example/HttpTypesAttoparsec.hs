@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module HttpTypesAttoparsec where
 
-import GenAttoparsec
+import ABNF.ClassyParser.Gen.Attoparsec
 import HttpTypesParser
 import Data.Attoparsec.ByteString.Char8 (Parser, parseOnly)
 import Data.ByteString (ByteString)

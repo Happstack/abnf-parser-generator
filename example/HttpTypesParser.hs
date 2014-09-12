@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings, QuasiQuotes, TemplateHaskell #-}
 module HttpTypesParser where
 
-import Classes
-
+import ABNF.ClassyParser.Classes
+import ABNF.ClassyParser.Gen.Attoparsec             (GenAttoparsec(..))
+import ABNF.ClassyParser.Gen.ABNF                   (GenABNF(..), normalizeAlternation)
 import ABNF.Types                (Rule(..), RuleName(..), RuleList(..), RuleMap(..), Alternation(..), ruleMap)
 import ABNF.Parser               (abnf,abnfRule)
 import ABNF.Printer              (ppElements, ppRuleList)
@@ -20,8 +21,6 @@ import Data.Maybe                (fromJust)
 import Data.Monoid               ((<>), mempty)
 import Language.Haskell.TH.Syntax (Lift(lift))
 import Language.Haskell.TH.Lift  (deriveLift)
-import GenAttoparsec             (GenAttoparsec(..))
-import GenABNF                   (GenABNF(..), normalizeAlternation)
 import Network.HTTP.Types        (HttpVersion(..), StdMethod(..), Header, HeaderName(..), RequestHeaders)
 
 ------------------------------------------------------------------------------
@@ -31,29 +30,29 @@ import Network.HTTP.Types        (HttpVersion(..), StdMethod(..), Header, Header
 sp_rule :: Rule
 sp_rule = [abnfRule|SP             =  %x20|]
 
-sp_parser :: ABNFParser repr => repr Char
+sp_parser :: ClassyParser repr => repr Char
 sp_parser = pHexChar "20"
 
 crlf_rule :: Rule
 crlf_rule = [abnfRule|CRLF = CR LF |]
 
-crlf_parser :: (ABNFParser repr) => repr ()
+crlf_parser :: (ClassyParser repr) => repr ()
 crlf_parser = pHexChar "0D" `appR` pHexChar "0A" `appR` pureR ()
 
 separators = "()<>@,;:\\\"/[]?={} \t"
 ctl = '\127':['\0'..'\31']
 
-token_parser :: (ABNFParser repr) => repr ByteString
+token_parser :: (ClassyParser repr) => repr ByteString
 token_parser =
     pTakeWhile1 (NotInClass (separators++ctl))
 
 fieldName_rule :: Rule
 fieldName_rule = [abnfRule|field-name     = token|]
 
-fieldName_parser :: (ABNFParser repr) => repr ByteString
+fieldName_parser :: (ClassyParser repr) => repr ByteString
 fieldName_parser = token_parser
 
-fieldValue_parser :: (ABNFParser repr) => repr ByteString
+fieldValue_parser :: (ClassyParser repr) => repr ByteString
 fieldValue_parser =
     pTakeWhile1 (NotInClass ctl)
 
@@ -64,7 +63,7 @@ fieldValue_parser =
 
 deriveLift ''StdMethod
 
-method_parser :: ABNFParser repr => repr StdMethod
+method_parser :: ClassyParser repr => repr StdMethod
 method_parser =
     pEnumerate [ ("OPTIONS", OPTIONS)
                , ("GET"    , GET)
@@ -78,7 +77,7 @@ method_parser =
                ]
 
 
-uri_parser :: ABNFParser repr => repr ByteString
+uri_parser :: ClassyParser repr => repr ByteString
 uri_parser = pCharVal "/"
 
 ------------------------------------------------------------------------------
@@ -100,7 +99,7 @@ httpVersion_rule :: Rule
 httpVersion_rule =
     [abnfRule|HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT |]
 
-httpVersion_parser :: (ABNFParser repr, HttpVersionC repr) => repr HttpVersion
+httpVersion_parser :: (ClassyParser repr, HttpVersionC repr) => repr HttpVersion
 httpVersion_parser =
     (pCharVal "HTTP")  `appR` (pCharVal "/") `appR` (httpVersion `app` (digitsToInt (pMany1 pDigit)) `appL` pCharVal "." `app` (digitsToInt (pMany1 pDigit)))
 
@@ -135,11 +134,11 @@ instance NothingIsEmpty GenAttoparsec where
 messageHeader_Rule :: Rule
 messageHeader_Rule = [abnfRule|message-header = field-name ":" [ field-value ] |]
 
-messageHeader_parser :: (ABNFParser repr, CiC repr, NothingIsEmpty repr) => repr Header
+messageHeader_parser :: (ClassyParser repr, CiC repr, NothingIsEmpty repr) => repr Header
 messageHeader_parser =
     pair `app` (mkCI `app` fieldName_parser) `appL` pCharVal ":" `app` (nothingIsEmpty `app` (pOptional $ fieldValue_parser))
 
-messageHeaders_parser :: (ABNFParser repr, CiC repr, NothingIsEmpty repr) => repr [Header]
+messageHeaders_parser :: (ClassyParser repr, CiC repr, NothingIsEmpty repr) => repr [Header]
 messageHeaders_parser =
     pMany (messageHeader_parser  `appL` crlf_parser)
 
@@ -190,7 +189,7 @@ instance RequestC GenAttoparsec where
 instance RequestC GenABNF where
     request = GenABNF (Alternation [])
 
-request_parser :: (ABNFParser repr, RequestC repr, CiC repr, NothingIsEmpty repr) => repr Request
+request_parser :: (ClassyParser repr, RequestC repr, CiC repr, NothingIsEmpty repr) => repr Request
 request_parser =
     request `app` method_parser         `appL` sp_parser
             `app` uri_parser            `appL` sp_parser
@@ -283,4 +282,3 @@ token = 1*("!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "0" / "1"
 field-value = 1*(" " / "!" / %x22 / "#" / "$" / "%" / "&" / "'" / "(" / ")" / "*" / "+" / "," / "-" / "." / "/" / "0" / "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / ":" / ";" / "<" / "=" / ">" / "?" / "@" / "A" / "B" / "C" / "D" / "E" / "F" / "G" / "H" / "I" / "J" / "K" / "L" / "M" / "N" / "O" / "P" / "Q" / "R" / "S" / "T" / "U" / "V" / "W" / "X" / "Y" / "Z" / "[" / "\" / "]" / "^" / "_" / "`" / "a" / "b" / "c" / "d" / "e" / "f" / "g" / "h" / "i" / "j" / "k" / "l" / "m" / "n" / "o" / "p" / "q" / "r" / "s" / "t" / "u" / "v" / "w" / "x" / "y" / "z" / "{" / "|" / "}" / "~")
 
          |]
-

@@ -1,8 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
-module GenAttoparsec where
+{-| 'ClassyParser' instance which generates an 'Attoparsec' parser.
+-}
+module ABNF.ClassyParser.Gen.Attoparsec
+       ( GenAttoparsec(..)
+       ) where
 
-import Classes
+import ABNF.ClassyParser.Classes
+import Control.Arrow (first)
 import Control.Applicative (Applicative(pure, (<*>),(<*), (*>)), many, optional)
+import Data.ByteString.Char8 (ByteString, pack, unpack)
 import Data.Char (chr)
 import qualified Data.Attoparsec.Combinator as A
 import qualified Data.Attoparsec.ByteString as AB
@@ -32,13 +38,16 @@ instance Pair GenAttoparsec where
 genAttoparsecPredicate :: Predicate -> (Char -> Bool)
 genAttoparsecPredicate (NotInClass str) = ABC.notInClass str
 
-instance ABNFParser GenAttoparsec where
-    pCharVal t = GA [| AB.string t |]
+instance ClassyParser GenAttoparsec where
+    pCharVal t =
+      let s = unpack t
+      in GA [| AB.string (pack s) |]
     pHexChar s =
         let c = chr (read $ "0x" ++ s)
         in GA [| ABC.char c |]
     pEnumerate choices =
-        GA [| A.choice [ AB.string t *> pure v | (t, v) <- choices] |]
+      let choices' = map (first unpack) choices
+      in GA [| A.choice [ AB.string (pack s) *> pure v | (s, v) <- choices'] |]
     pDigit = GA [| ABC.digit |]
     pTakeWhile1 pred = GA [| ABC.takeWhile1 (genAttoparsecPredicate pred) |]
     pMany p = GA [| many p |]
