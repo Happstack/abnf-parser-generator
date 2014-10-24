@@ -1,5 +1,5 @@
 name:                abnf-parser-generator
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            create and validate parsers for ABNF grammars
 license:             BSD3
 license-file:        LICENSE
@@ -20,7 +20,7 @@ library
                        parsec           >= 3.1  && < 3.2,
                        abnf             >= 0.1  && < 0.2,
                        mtl              >= 2.1  && < 2.3,
-                       text             >= 1.1  && < 1.2,
+                       text             >= 1.1  && < 1.3,
                        containers       >= 0.5  && < 0.6,
                        template-haskell >= 2.8  && < 2.10,
                        th-lift          >= 0.6  && < 0.7,
