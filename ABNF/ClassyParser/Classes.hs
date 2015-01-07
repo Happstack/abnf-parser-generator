@@ -53,7 +53,7 @@ class (Pair repr, ApplicativeRepr repr) => ClassyParser repr where
     pEnumerate  :: (Lift a) => [(ByteString, a)] -> repr a
     pDigit      :: repr Char
     pTakeWhile1 :: Predicate -> repr ByteString
-    pMany       :: (Lift a) => repr a -> repr [a]
-    pMany1      :: (Lift a) => repr a -> repr [a]
-    pOptional   :: (Lift a) => repr a -> repr (Maybe a)
+    pMany       :: repr a -> repr [a]
+    pMany1      :: repr a -> repr [a]
+    pOptional   :: repr a -> repr (Maybe a)
     digitsToInt :: repr [Char] -> repr Int

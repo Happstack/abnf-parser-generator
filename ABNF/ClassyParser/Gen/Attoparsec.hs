@@ -14,6 +14,7 @@ import qualified Data.Attoparsec.Combinator as A
 import qualified Data.Attoparsec.ByteString as AB
 import qualified Data.Attoparsec.ByteString.Char8 as ABC
 -- import qualified Data.Attoparsec.Text       as AT
+
 import Language.Haskell.TH        (Exp, ExpQ, Q, appE, varE)
 import Language.Haskell.TH.Syntax (Lift(lift))
 import Language.Haskell.TH.Lift   (deriveLift)
@@ -67,3 +68,4 @@ readDec_ s =
 --    pAnyChar   = TH [| anyChar |]
     pEnumerate choices = TH [| choice (map (\(t, v) -> string (unpack t) >> return v) choices) |]
 -}
+

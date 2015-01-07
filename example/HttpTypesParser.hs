@@ -178,7 +178,7 @@ data Request = Request
     , headers :: RequestHeaders
     }
     deriving Show
-$(deriveLift ''Request)
+-- $(deriveLift ''Request)
 
 class (HttpVersionC repr) => RequestC repr where
     request :: repr (StdMethod -> ByteString -> HttpVersion -> RequestHeaders -> Request)
